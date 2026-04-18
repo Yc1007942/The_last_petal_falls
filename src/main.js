@@ -57,7 +57,7 @@ async function boot() {
   const { app, layers } = await initRenderer();
 
   // Load assets
-  loadingText.textContent = 'Loading assets…';
+  loadingText.textContent = 'Loading assets, please wait…';
   await loadAssets((progress) => {
     loadingBar.style.width = `${progress * 100}%`;
     loadingText.textContent = `Loading… ${Math.round(progress * 100)}%`;
