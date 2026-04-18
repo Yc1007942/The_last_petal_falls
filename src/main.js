@@ -13,7 +13,7 @@ import {
   initStorm, updateStorm,
   initRebirth, updateRebirth,
   initFloraContainer, spawnWildFlora, spawnWildBird, updateFlora,
-  startShake, updateShakes,
+  startShake, updateShakes, isShaking,
 } from './rendering/effects.js';
 import { createGameWorld, populateGarden } from './ecs/world.js';
 import {
@@ -136,8 +136,8 @@ async function boot() {
         scene.glitchFilters[spriteIdx].time = world.time.elapsed;
       }
 
-      // Screen shake on the sprite
-      startShake(eid, sprite, 3 + world.gameState * 2, 0.1);
+      // Screen shake on the sprite — pass authoritative position
+      startShake(eid, sprite, Position.x[eid], Position.y[eid], 3 + world.gameState * 2, 0.15);
 
       // Glitch SFX — throttle to avoid stacking
       if (world.time.elapsed - lastGlitchTime > 0.12) {
@@ -349,6 +349,7 @@ function updateEntityVisuals(world, scene, delta) {
     const type = Interactable.type[eid];
     const sprite = scene.entitySprites[i];
     const desatFilter = scene.desatFilters[i];
+    const baseScale = getBaseScale(type);
 
     // Desaturation based on health
     desatFilter.decay = 1.0 - healthPct;
@@ -367,17 +368,41 @@ function updateEntityVisuals(world, scene, delta) {
       }
     }
 
-    // Gentle wobble when health is low
-    if (healthPct < 0.3 && healthPct > 0) {
-      const wobble = Math.sin(world.time.elapsed * 4 + i) * (0.3 - healthPct) * 5;
-      sprite.x = Position.x[eid] + wobble;
+    // === Position: always reset from ECS data first ===
+    // This prevents shake/wobble from fighting over sprite.x/y
+    if (!isShaking(eid)) {
+      sprite.x = Position.x[eid];
+      sprite.y = Position.y[eid];
     }
 
-    // Scale pulse when being healed
+    // === Scale: shrink as health decreases for visible decay ===
     if (state === ENTITY_STATE.BEING_FORCED) {
+      // Pulse effect when being healed
       const pulse = 1 + Math.sin(world.time.elapsed * 12) * 0.03;
-      const baseScale = getBaseScale(type);
       sprite.scale.set(baseScale * pulse);
+    } else if (state === ENTITY_STATE.RUINED || state === ENTITY_STATE.RECLAIMED) {
+      // Fully decayed: small and faded
+      sprite.scale.set(baseScale * 0.7);
+    } else {
+      // Scale from 1.0 (full health) down to 0.75 (zero health)
+      const scaleDecay = 0.75 + healthPct * 0.25;
+      sprite.scale.set(baseScale * scaleDecay);
+    }
+
+    // === Alpha: fade as health drops below 30% ===
+    if (state === ENTITY_STATE.RUINED || state === ENTITY_STATE.RECLAIMED) {
+      sprite.alpha = 0.35;
+    } else if (healthPct < 0.3 && healthPct > 0) {
+      sprite.alpha = 0.5 + healthPct * (0.5 / 0.3); // 0.5 → 1.0 over 0-30% range
+    } else {
+      sprite.alpha = 1.0;
+    }
+
+    // === Wobble: more pronounced when health is low ===
+    if (healthPct < 0.4 && healthPct > 0 && !isShaking(eid)) {
+      const wobbleIntensity = (0.4 - healthPct) * 8;
+      const wobble = Math.sin(world.time.elapsed * 5 + i * 2) * wobbleIntensity;
+      sprite.x = Position.x[eid] + wobble;
     }
   }
 }
@@ -424,8 +449,8 @@ function updateBackgroundCrossfade(scene, world) {
     scene.backgrounds.climax.alpha = 0;
   } else if (state === 1) {
     // STRUGGLE — start blending toward withered
-    const progress = Math.min(1, (world.time.elapsed - 90) / 90);
-    scene.backgrounds.withered.alpha = Math.min(progress * 0.5, scene.backgrounds.withered.alpha + delta * 0.1);
+    const progress = Math.min(1, (world.time.elapsed - 45) / 45);
+    scene.backgrounds.withered.alpha = Math.min(progress * 0.6, scene.backgrounds.withered.alpha + delta * 0.15);
   } else if (state === 2) {
     // CLIMAX — full withered
     scene.backgrounds.withered.alpha = Math.min(1, scene.backgrounds.withered.alpha + delta * 0.3);

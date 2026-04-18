@@ -18,15 +18,16 @@ const PUBLIC = join(ROOT, 'public');
 // Coordinates refined to exclude text labels by starting below label area
 const SHEET1_SPRITES = [
   // Row 1 — top half (labels at ~y:20-55, sprites start around y:70+)
-  { name: 'tree_bloom',    x: 5,    y: 80,   w: 510,  h: 640 },
-  { name: 'tree_dead',     x: 530,  y: 80,   w: 500,  h: 640 },
-  { name: 'caged_bird',    x: 1070, y: 80,   w: 420,  h: 680 },
-  { name: 'cat',           x: 1530, y: 80,   w: 380,  h: 600 },
-  // Row 2 — bottom half (labels at ~y:755-790)
-  { name: 'flowers_bloom', x: 5,    y: 850,  w: 500,  h: 600 },
-  { name: 'flowers_dead',  x: 530,  y: 850,  w: 500,  h: 600 },
-  { name: 'fish_frame1',   x: 1530, y: 900,  w: 580,  h: 560 },
-  { name: 'fish_frame2',   x: 2130, y: 900,  w: 600,  h: 560 },
+  // Push y-start down past label text
+  { name: 'tree_bloom',    x: 5,    y: 110,  w: 510,  h: 610 },
+  { name: 'tree_dead',     x: 530,  y: 110,  w: 500,  h: 610 },
+  { name: 'caged_bird',    x: 1070, y: 110,  w: 420,  h: 650 },
+  { name: 'cat',           x: 1530, y: 120,  w: 380,  h: 560 },
+  // Row 2 — bottom half (labels at ~y:755-800)
+  { name: 'flowers_bloom', x: 5,    y: 890,  w: 500,  h: 560 },
+  { name: 'flowers_dead',  x: 530,  y: 890,  w: 500,  h: 560 },
+  { name: 'fish_frame1',   x: 1530, y: 975,  w: 580,  h: 485 },
+  { name: 'fish_frame2',   x: 2130, y: 975,  w: 600,  h: 485 },
 ];
 
 // Sprite definitions from interactable_assets-2.png (2752×1536)

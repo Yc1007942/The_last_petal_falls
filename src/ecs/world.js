@@ -76,7 +76,7 @@ export function populateGarden(world) {
     type: ENTITY_TYPE.TREE,
     tool: TOOL_TYPE.PRUNER,
     x: 160, y: 300,
-    health: 100, decayRate: 0.8,
+    health: 100, decayRate: 2.5,
     spriteIndex: 0,
   });
 
@@ -84,7 +84,7 @@ export function populateGarden(world) {
     type: ENTITY_TYPE.TREE,
     tool: TOOL_TYPE.PRUNER,
     x: 1050, y: 250,
-    health: 100, decayRate: 0.9,
+    health: 100, decayRate: 3.0,
     spriteIndex: 1,
   });
 
@@ -93,7 +93,7 @@ export function populateGarden(world) {
     type: ENTITY_TYPE.FLOWER,
     tool: TOOL_TYPE.WATER,
     x: 100, y: 600,
-    health: 100, decayRate: 1.2,
+    health: 100, decayRate: 3.5,
     spriteIndex: 2,
   });
 
@@ -101,7 +101,7 @@ export function populateGarden(world) {
     type: ENTITY_TYPE.FLOWER,
     tool: TOOL_TYPE.WATER,
     x: 850, y: 620,
-    health: 100, decayRate: 1.1,
+    health: 100, decayRate: 4.0,
     spriteIndex: 3,
   });
 
@@ -110,7 +110,7 @@ export function populateGarden(world) {
     type: ENTITY_TYPE.FISH,
     tool: TOOL_TYPE.FISH_FOOD,
     x: 450, y: 500,
-    health: 100, decayRate: 1.0,
+    health: 100, decayRate: 3.0,
     spriteIndex: 4,
   });
 
@@ -119,7 +119,8 @@ export function populateGarden(world) {
     type: ENTITY_TYPE.CAT,
     tool: TOOL_TYPE.CAT_FOOD,
     x: 1150, y: 520,
-    health: 100, decayRate: 0.7,
+    health: 100, decayRate: 2.0,
     spriteIndex: 5,
   });
 }
+

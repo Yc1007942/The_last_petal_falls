@@ -133,8 +133,8 @@ export function interactionSystem(world) {
 // EFFORT TRACKING SYSTEM — Monitors frantic user interactions
 // ============================================================
 const EFFORT_WINDOW = 10; // seconds
-const EFFORT_THRESHOLD_STRUGGLE = 15; // actions in window to trigger struggle
-const EFFORT_THRESHOLD_CLIMAX = 30;   // actions in window to trigger climax
+const EFFORT_THRESHOLD_STRUGGLE = 8;  // actions in window to trigger struggle
+const EFFORT_THRESHOLD_CLIMAX = 18;   // actions in window to trigger climax
 
 export function effortTrackingSystem(world) {
   const now = world.time.elapsed;
@@ -147,8 +147,8 @@ export function effortTrackingSystem(world) {
 
   // Transition logic
   if (world.gameState === 0) {
-    // ILLUSION → STRUGGLE: after 90s OR lots of effort
-    if (now > 90 || recentCount > EFFORT_THRESHOLD_STRUGGLE) {
+    // ILLUSION → STRUGGLE: after 45s OR lots of effort
+    if (now > 45 || recentCount > EFFORT_THRESHOLD_STRUGGLE) {
       world.gameState = 1; // STRUGGLE
     }
   } else if (world.gameState === 1) {
@@ -157,8 +157,8 @@ export function effortTrackingSystem(world) {
       world.gameState = 2; // CLIMAX
       world.stormProgress = 0;
     }
-    // Also auto-trigger climax after 180s total
-    if (now > 180) {
+    // Also auto-trigger climax after 120s total
+    if (now > 120) {
       world.gameState = 2;
       world.stormProgress = 0;
     }
@@ -175,6 +175,16 @@ const REBIRTH_DELAY = 3;   // seconds after storm before rebirth starts
 
 export function gameStateSystem(world) {
   const { delta } = world.time;
+
+  if (world.gameState === 0) {
+    // ILLUSION — gradually ramp up decay
+    const elapsed = world.time.elapsed;
+    const ramp = 1.0 + Math.min(0.5, elapsed / 60); // 1.0 → 1.5 over 60s
+    const entities = healthQuery(world);
+    for (const eid of entities) {
+      DecayMultiplier.value[eid] = ramp;
+    }
+  }
 
   if (world.gameState === 1) {
     // STRUGGLE — increase decay multipliers

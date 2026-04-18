@@ -6,33 +6,62 @@ import { CANVAS_W, CANVAS_H } from './setup.js';
 
 // ============================================================
 // SCREEN SHAKE — Sinusoidal position offset on a sprite
+// Uses authoritative Position data to prevent drift
 // ============================================================
-const shakeTargets = new Map(); // eid → { sprite, intensity, elapsed, duration }
+const shakeTargets = new Map(); // eid → { sprite, intensity, elapsed, duration, posX, posY }
 
-export function startShake(eid, sprite, intensity = 4, duration = 0.3) {
+/**
+ * Start a shake effect on an entity's sprite.
+ * @param {number} eid - Entity ID
+ * @param {object} sprite - PIXI Sprite
+ * @param {number} posX - Authoritative X position from ECS Position component
+ * @param {number} posY - Authoritative Y position from ECS Position component
+ * @param {number} intensity - Shake amplitude in pixels
+ * @param {number} duration - Shake duration in seconds
+ */
+export function startShake(eid, sprite, posX, posY, intensity = 4, duration = 0.3) {
+  // Don't re-trigger if already shaking — just refresh duration
+  if (shakeTargets.has(eid)) {
+    const existing = shakeTargets.get(eid);
+    existing.posX = posX;
+    existing.posY = posY;
+    existing.intensity = intensity;
+    // Reset elapsed only if nearly done, to keep shake continuous
+    if (existing.elapsed > existing.duration * 0.7) {
+      existing.elapsed = 0;
+    }
+    return;
+  }
   shakeTargets.set(eid, {
     sprite,
     intensity,
     elapsed: 0,
     duration,
-    origX: sprite.x,
-    origY: sprite.y,
+    posX,
+    posY,
   });
+}
+
+/** Check if an entity currently has an active shake */
+export function isShaking(eid) {
+  return shakeTargets.has(eid);
 }
 
 export function updateShakes(delta) {
   for (const [eid, shake] of shakeTargets) {
     shake.elapsed += delta;
     if (shake.elapsed >= shake.duration) {
-      shake.sprite.x = shake.origX;
-      shake.sprite.y = shake.origY;
+      // Reset to authoritative position
+      shake.sprite.x = shake.posX;
+      shake.sprite.y = shake.posY;
       shakeTargets.delete(eid);
       continue;
     }
     const t = shake.elapsed / shake.duration;
     const decay = 1 - t;
-    shake.sprite.x = shake.origX + Math.sin(shake.elapsed * 40) * shake.intensity * decay;
-    shake.sprite.y = shake.origY + Math.cos(shake.elapsed * 35) * shake.intensity * decay * 0.5;
+    // Apply offset from the authoritative position, not the current sprite pos
+    shake.sprite.x = shake.posX + Math.sin(shake.elapsed * 40) * shake.intensity * decay;
+    shake.sprite.y = shake.posY + Math.cos(shake.elapsed * 35) * shake.intensity * decay * 0.5;
   }
 }
 
