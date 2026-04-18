@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="The Last Petal Falls — An interactive artefact exploring the tension between preservation and decay in a traditional Chinese scholar's garden." />
-  <title>The Last Petal Falls | 最後一瓣落下</title>
+  <meta name="description" content="The Last Petal Falls — The preservation and decay in a garden." />
+  <title>The Last Petal Falls </title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Ma+Shan+Zheng&display=swap" rel="stylesheet" />
@@ -23,6 +23,8 @@
       position: absolute;
       top: 0; left: 0;
     }
+
+    /* ===== LOADING SCREEN ===== */
     #loading-screen {
       position: fixed; inset: 0;
       z-index: 1000;
@@ -72,9 +74,168 @@
       margin-top: 1em;
       letter-spacing: 0.2em;
     }
+
+    /* ===== TUTORIAL OVERLAY ===== */
+    #tutorial-overlay {
+      position: fixed; inset: 0;
+      z-index: 900;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10, 8, 5, 0.92);
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+    #tutorial-overlay.visible {
+      display: flex;
+      opacity: 1;
+    }
+    #tutorial-overlay.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .tutorial-card {
+      max-width: 620px;
+      padding: 2.5em 3em;
+      text-align: center;
+      border: 1px solid rgba(138, 126, 107, 0.25);
+      border-radius: 16px;
+      background: radial-gradient(ellipse at center, rgba(30, 25, 18, 0.95) 0%, rgba(15, 12, 8, 0.95) 100%);
+      box-shadow: 0 0 80px rgba(212, 197, 169, 0.06);
+    }
+    .tutorial-card h2 {
+      font-family: 'Ma Shan Zheng', cursive;
+      font-size: 2.2rem;
+      color: #d4c5a9;
+      margin-bottom: 0.2em;
+      letter-spacing: 0.1em;
+      text-shadow: 0 0 20px rgba(212, 197, 169, 0.2);
+    }
+    .tutorial-card .subtitle {
+      font-size: 0.85rem;
+      color: #8a7e6b;
+      letter-spacing: 0.25em;
+      margin-bottom: 1.8em;
+    }
+    .tutorial-card p {
+      font-size: 0.95rem;
+      color: #c4b598;
+      line-height: 1.8;
+      margin-bottom: 1em;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+    }
+    .tutorial-card .dim {
+      color: #8a7e6b;
+      font-size: 0.85rem;
+    }
+    .tutorial-tools {
+      display: flex;
+      gap: 1.2em;
+      justify-content: center;
+      margin: 1.5em 0;
+      flex-wrap: wrap;
+    }
+    .tutorial-tool {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3em;
+      background: rgba(42, 37, 32, 0.6);
+      border: 1px solid rgba(138, 126, 107, 0.2);
+      border-radius: 10px;
+      padding: 0.7em 1em;
+      min-width: 90px;
+    }
+    .tutorial-tool .icon {
+      font-size: 1.5rem;
+    }
+    .tutorial-tool .tool-name {
+      font-size: 0.7rem;
+      color: #d4c5a9;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .tutorial-tool .tool-target {
+      font-size: 0.65rem;
+      color: #8a7e6b;
+    }
+    .tutorial-divider {
+      width: 60px;
+      height: 1px;
+      background: rgba(138, 126, 107, 0.3);
+      margin: 1.2em auto;
+    }
+    #tutorial-start-btn {
+      margin-top: 1.5em;
+      padding: 0.7em 2.5em;
+      background: linear-gradient(135deg, rgba(90, 74, 48, 0.7), rgba(60, 50, 35, 0.7));
+      border: 1px solid rgba(212, 197, 169, 0.35);
+      border-radius: 8px;
+      color: #d4c5a9;
+      font-family: 'Noto Serif SC', serif;
+      font-size: 0.95rem;
+      cursor: pointer;
+      letter-spacing: 0.15em;
+      transition: all 0.3s ease;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    #tutorial-start-btn:hover {
+      background: linear-gradient(135deg, rgba(110, 90, 55, 0.8), rgba(80, 66, 45, 0.8));
+      border-color: rgba(212, 197, 169, 0.6);
+      box-shadow: 0 0 20px rgba(212, 197, 169, 0.1);
+      transform: scale(1.03);
+    }
+
+    /* ===== RESTART OVERLAY ===== */
+    #restart-overlay {
+      position: fixed; inset: 0;
+      z-index: 800;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    #restart-overlay.visible {
+      display: flex;
+      pointer-events: auto;
+    }
+    #restart-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 850;
+      display: none;
+      padding: 0.6em 1.8em;
+      background: rgba(26, 21, 16, 0.8);
+      border: 1px solid rgba(138, 126, 107, 0.35);
+      border-radius: 8px;
+      color: #d4c5a9;
+      font-family: 'Noto Serif SC', serif;
+      font-size: 0.8rem;
+      cursor: pointer;
+      letter-spacing: 0.15em;
+      transition: all 0.3s ease;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+      opacity: 0;
+    }
+    #restart-btn.visible {
+      display: block;
+      animation: fadeInRestart 2s ease forwards;
+    }
+    @keyframes fadeInRestart {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    #restart-btn:hover {
+      background: rgba(40, 33, 24, 0.9);
+      border-color: rgba(212, 197, 169, 0.6);
+      box-shadow: 0 0 15px rgba(212, 197, 169, 0.1);
+    }
   </style>
 </head>
 <body>
+  <!-- Loading Screen -->
   <div id="loading-screen">
     <h1>最後一瓣落下</h1>
     <h2>THE LAST PETAL FALLS</h2>
@@ -83,6 +244,58 @@
     </div>
     <p id="loading-text">Loading…</p>
   </div>
+
+  <!-- Tutorial Overlay -->
+  <div id="tutorial-overlay">
+    <div class="tutorial-card">
+      <h2>The garden</h2>
+      <div class="subtitle">THE GARDEN</div>
+
+      <p>
+        You are the keeper of a garden.<br>
+        Time moves forward. The garden decays.<br>
+        Select a tool below and <strong>hold</strong> your cursor over an element to maintain it.
+      </p>
+
+      <div class="tutorial-divider"></div>
+
+      <div class="tutorial-tools">
+        <div class="tutorial-tool">
+          <span class="icon">💧</span>
+          <span class="tool-name">Water</span>
+          <span class="tool-target">→ Flowers</span>
+        </div>
+        <div class="tutorial-tool">
+          <span class="icon">🐟</span>
+          <span class="tool-name">Fish Food</span>
+          <span class="tool-target">→ Koi Fish</span>
+        </div>
+        <div class="tutorial-tool">
+          <span class="icon">🐱</span>
+          <span class="tool-name">Cat Food</span>
+          <span class="tool-target">→ Cat</span>
+        </div>
+        <div class="tutorial-tool">
+          <span class="icon">✂️</span>
+          <span class="tool-name">Pruner</span>
+          <span class="tool-target">→ Trees</span>
+        </div>
+      </div>
+
+      <div class="tutorial-divider"></div>
+
+      <p class="dim">
+        The garden bar at the top shows overall health.<br>
+        Can you keep it alive — or will you learn to let go?
+      </p>
+
+      <button id="tutorial-start-btn">Enter the Garden</button>
+    </div>
+  </div>
+
+  <!-- Restart Button (appears during Rebirth) -->
+  <button id="restart-btn">🌸 Begin Again</button>
+
   <div id="game-canvas"></div>
   <script type="module" src="/src/main.js"></script>
 </body>

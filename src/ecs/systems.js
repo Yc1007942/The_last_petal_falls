@@ -1,6 +1,3 @@
-/**
- * ECS Systems — All game logic systems run each frame
- */
 import { defineQuery } from 'bitecs';
 import {
   Health, Position, SpriteRef, Interactable,
@@ -11,6 +8,37 @@ import {
 // Query: all entities with Health + EntityState
 const healthQuery = defineQuery([Health, EntityState, DecayMultiplier]);
 const interactableQuery = defineQuery([Interactable, Position, Health, EntityState]);
+
+// ============================================================
+// GARDEN HEALTH SYSTEM — Tracks overall garden vitality
+// ============================================================
+export function gardenHealthSystem(world) {
+  const entities = healthQuery(world);
+  let totalHealth = 0;
+  let totalMax = 0;
+
+  for (const eid of entities) {
+    totalHealth += Health.current[eid];
+    totalMax += Health.max[eid];
+  }
+
+  const pct = totalMax > 0 ? totalHealth / totalMax : 0;
+  world.gardenHealth = pct;
+
+  // If garden health drops to 0, immediately trigger climax
+  if (pct <= 0 && world.gameState < 2) {
+    world.gameState = 2;
+    world.stormProgress = 0;
+  }
+
+  // If garden health below 40% and still in ILLUSION, enter STRUGGLE
+  if (pct < 0.4 && world.gameState === 0) {
+    world.gameState = 1;
+  }
+
+  return world;
+}
+
 
 // ============================================================
 // DECAY SYSTEM — Health constantly decreases over time

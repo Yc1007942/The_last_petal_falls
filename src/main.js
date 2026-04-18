@@ -24,10 +24,21 @@ import {
 import {
   decaySystem, interactionSystem,
   effortTrackingSystem, gameStateSystem,
+  gardenHealthSystem,
 } from './ecs/systems.js';
 import { initInput } from './interaction/input.js';
 import { Toolbar } from './ui/toolbar.js';
+import { GardenHUD } from './ui/hud.js';
 import { audioManager } from './audio/manager.js';
+
+// Entity name map for heal feedback
+const ENTITY_NAMES = {
+  [ENTITY_TYPE.TREE]: 'Tree',
+  [ENTITY_TYPE.FLOWER]: 'Flowers',
+  [ENTITY_TYPE.FISH]: 'Koi',
+  [ENTITY_TYPE.BIRD]: 'Bird',
+  [ENTITY_TYPE.CAT]: 'Cat',
+};
 
 // ============================================================
 // BOOT
@@ -36,6 +47,9 @@ import { audioManager } from './audio/manager.js';
 const loadingBar = document.getElementById('loading-bar-inner');
 const loadingText = document.getElementById('loading-text');
 const loadingScreen = document.getElementById('loading-screen');
+const tutorialOverlay = document.getElementById('tutorial-overlay');
+const tutorialStartBtn = document.getElementById('tutorial-start-btn');
+const restartBtn = document.getElementById('restart-btn');
 
 async function boot() {
   // Initialize renderer
@@ -75,10 +89,13 @@ async function boot() {
   // Create toolbar
   const toolbar = new Toolbar(layers.ui, world);
 
+  // Create HUD (garden health bar)
+  const hud = new GardenHUD(layers.ui);
+
   // Add instructional text
   const instructionText = createInstructionText(layers.ui);
 
-  // Fade out loading screen
+  // === FADE OUT LOADING → SHOW TUTORIAL ===
   loadingBar.style.width = '100%';
   loadingText.textContent = 'Enter the garden…';
   await new Promise(r => setTimeout(r, 600));
@@ -86,6 +103,29 @@ async function boot() {
   setTimeout(() => {
     loadingScreen.style.display = 'none';
   }, 1600);
+
+  // Show tutorial overlay
+  await new Promise(r => setTimeout(r, 1000));
+  tutorialOverlay.classList.add('visible');
+
+  // PAUSE game until tutorial is dismissed
+  let gamePaused = true;
+
+  tutorialStartBtn.addEventListener('click', () => {
+    tutorialOverlay.classList.add('fade-out');
+    setTimeout(() => {
+      tutorialOverlay.style.display = 'none';
+    }, 900);
+    gamePaused = false;
+    // Unlock audio on first user gesture
+    audioManager.unlock();
+    audioManager.playBGM('illusion', 3);
+  });
+
+  // === RESTART HANDLER ===
+  restartBtn.addEventListener('click', () => {
+    window.location.reload();
+  });
 
   // ============================================================
   // GAME LOOP
@@ -96,8 +136,11 @@ async function boot() {
   let lastGlitchTime = 0;
   let fishAnimTimer = 0;
   let windChimeTimer = 0;
+  let healFeedbackCooldown = 0;
 
   app.ticker.add((ticker) => {
+    if (gamePaused) return; // Wait for tutorial dismissal
+
     const delta = ticker.deltaMS / 1000; // actual seconds elapsed since last frame
     world.time.delta = delta;
     world.time.elapsed += delta;
@@ -105,6 +148,7 @@ async function boot() {
     // Run ECS systems
     decaySystem(world);
     interactionSystem(world);
+    gardenHealthSystem(world);
     effortTrackingSystem(world);
     gameStateSystem(world);
 
@@ -125,10 +169,13 @@ async function boot() {
     }
 
     // === HEALING EFFECTS ===
+    healFeedbackCooldown = Math.max(0, healFeedbackCooldown - delta);
+
     if (world._healingActive >= 0) {
       const eid = world._healingActive;
       const spriteIdx = SpriteRef.index[eid];
       const sprite = world.sprites[spriteIdx];
+      const entityType = Interactable.type[eid];
 
       // Glitch shader
       if (scene.glitchFilters[spriteIdx]) {
@@ -148,6 +195,13 @@ async function boot() {
 
       // Flash
       triggerFlash(0.1 + world.gameState * 0.05);
+
+      // Positive feedback — throttle to 1 per 2 seconds
+      if (healFeedbackCooldown <= 0) {
+        const name = ENTITY_NAMES[entityType] || 'Entity';
+        hud.triggerHealFeedback(name);
+        healFeedbackCooldown = 2.0;
+      }
     } else {
       // Fade out glitch filters
       for (const gf of scene.glitchFilters) {
@@ -165,7 +219,7 @@ async function boot() {
     // Storm vignette
     if (scene.vignetteFilter) {
       if (world.gameState === 2) {
-        scene.vignetteFilter.darkness = Math.min(1, world.stormProgress / 3);
+        scene.vignetteFilter.darkness = Math.min(0.4, world.stormProgress / 4);
       } else if (world.gameState === 3) {
         scene.vignetteFilter.darkness = Math.max(0, scene.vignetteFilter.darkness - delta * 0.2);
       }
@@ -173,6 +227,9 @@ async function boot() {
 
     // === BACKGROUND CROSSFADE ===
     updateBackgroundCrossfade(scene, world);
+
+    // === HUD UPDATE ===
+    hud.update(delta, world.gardenHealth, world.gameState, world._healingActive >= 0);
 
     // === TOOLBAR UPDATE ===
     toolbar.update(delta, world.gameState);
@@ -188,6 +245,11 @@ async function boot() {
       if (windChimeTimer > 6 + Math.random() * 8) {
         windChimeTimer = 0;
         audioManager.playWindChime();
+      }
+
+      // Show restart button after 8 seconds in rebirth
+      if (world.rebirthProgress > 8) {
+        restartBtn.classList.add('visible');
       }
     }
   });
@@ -233,9 +295,6 @@ async function boot() {
         break;
     }
   }
-
-  // Start BGM
-  audioManager.playBGM('illusion', 3);
 }
 
 // ============================================================
@@ -391,7 +450,7 @@ function updateEntityVisuals(world, scene, delta) {
 
     // === Alpha: fade as health drops below 30% ===
     if (state === ENTITY_STATE.RUINED || state === ENTITY_STATE.RECLAIMED) {
-      sprite.alpha = 0.35;
+      sprite.alpha = 0.6;
     } else if (healthPct < 0.3 && healthPct > 0) {
       sprite.alpha = 0.5 + healthPct * (0.5 / 0.3); // 0.5 → 1.0 over 0-30% range
     } else {
@@ -464,24 +523,25 @@ function updateBackgroundCrossfade(scene, world) {
 }
 
 // ============================================================
-// INSTRUCTION TEXT
+// INSTRUCTION TEXT — With better contrast
 // ============================================================
 function createInstructionText(uiLayer) {
   const container = new Container();
   container.x = CANVAS_W / 2;
-  container.y = 50;
+  container.y = 58;
 
   const text = new Text({
     text: 'Select a tool below, then hold your cursor over a garden element to maintain it.',
     style: {
       fontSize: 14,
-      fill: '#d4c5a9',
+      fill: '#ede4d4',
       fontFamily: 'Noto Serif SC, serif',
       align: 'center',
+      fontWeight: '700',
       dropShadow: true,
       dropShadowColor: '#000000',
-      dropShadowBlur: 4,
-      dropShadowDistance: 1,
+      dropShadowBlur: 8,
+      dropShadowDistance: 2,
     },
   });
   text.anchor.set(0.5);
@@ -492,9 +552,13 @@ function createInstructionText(uiLayer) {
     text: '选择下方工具，按住鼠标维护花园元素',
     style: {
       fontSize: 11,
-      fill: '#8a7e6b',
+      fill: '#c4b598',
       fontFamily: 'Noto Serif SC, serif',
       align: 'center',
+      dropShadow: true,
+      dropShadowColor: '#000000',
+      dropShadowBlur: 6,
+      dropShadowDistance: 1,
     },
   });
   subtext.anchor.set(0.5);

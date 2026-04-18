@@ -28,6 +28,9 @@ export function createGameWorld() {
   world.sprites = [];   // parallel PIXI sprite references
   world.stormProgress = 0;
   world.rebirthProgress = 0;
+  world.gardenHealth = 1.0; // 0-1 overall garden vitality
+  world._healingActive = -1;
+  world._lastHealFeedback = 0; // throttle heal feedback
   return world;
 }
 

@@ -107,7 +107,7 @@ export function initStorm(overlayLayer) {
   const darkBg = new Graphics();
   darkBg.rect(0, 0, CANVAS_W, CANVAS_H);
   darkBg.fill({ color: 0x000000 });
-  darkBg.alpha = 0.6;
+  darkBg.alpha = 0.35; // reduced from 0.6 to make it brighter
   stormContainer.addChild(darkBg);
 
   // Rain drops
