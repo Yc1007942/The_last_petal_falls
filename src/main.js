@@ -98,7 +98,7 @@ async function boot() {
   let windChimeTimer = 0;
 
   app.ticker.add((ticker) => {
-    const delta = ticker.deltaTime / 60; // normalize to seconds (ticker runs at ~60fps)
+    const delta = ticker.deltaMS / 1000; // actual seconds elapsed since last frame
     world.time.delta = delta;
     world.time.elapsed += delta;
 

@@ -70,8 +70,9 @@ export function interactionSystem(world) {
     if (!sprite) continue;
 
     // Hit test — check if mouse is within sprite bounds
-    const halfW = (sprite.width * sprite.scale.x) / 2;
-    const halfH = (sprite.height * sprite.scale.y) / 2;
+    // sprite.width/height already include scale in PixiJS 8
+    const halfW = sprite.width / 2;
+    const halfH = sprite.height / 2;
     const dx = mouseX - ex;
     const dy = mouseY - ey;
 
@@ -85,6 +86,7 @@ export function interactionSystem(world) {
       if (mouseDown && hasTool) {
         // Heal the entity — rapid health restoration
         const healRate = 25.0; // health/second while healing
+        const prevHealth = Health.current[eid];
         Health.current[eid] = Math.min(
           Health.max[eid],
           Health.current[eid] + healRate * delta
@@ -94,8 +96,12 @@ export function interactionSystem(world) {
         EntityState.value[eid] = ENTITY_STATE.BEING_FORCED;
 
         // Track this interaction for the effort tracker
-        world.effortTracker.actions.push(world.time.elapsed);
-        world.effortTracker.totalActions++;
+        // Throttle: max 2 action entries per second to avoid frame-rate flooding
+        const lastAction = world.effortTracker.actions[world.effortTracker.actions.length - 1] || 0;
+        if (world.time.elapsed - lastAction > 0.5 && prevHealth < Health.max[eid]) {
+          world.effortTracker.actions.push(world.time.elapsed);
+          world.effortTracker.totalActions++;
+        }
 
         // Signal the audio/visual systems
         world._healingActive = eid;
