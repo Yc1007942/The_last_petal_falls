@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="The Last Petal Falls — An interactive artefact exploring the tension between preservation and decay in a traditional Chinese scholar's garden." />
+  <title>The Last Petal Falls | 最後一瓣落下</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Ma+Shan+Zheng&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #0a0a0a;
+      font-family: 'Noto Serif SC', serif;
+    }
+    #game-canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0; left: 0;
+    }
+    #loading-screen {
+      position: fixed; inset: 0;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at center, #1a1510 0%, #0a0805 100%);
+      transition: opacity 1.5s ease;
+    }
+    #loading-screen.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #loading-screen h1 {
+      font-family: 'Ma Shan Zheng', cursive;
+      font-size: 3.5rem;
+      color: #d4c5a9;
+      letter-spacing: 0.15em;
+      margin-bottom: 0.3em;
+      text-shadow: 0 0 40px rgba(212, 197, 169, 0.3);
+    }
+    #loading-screen h2 {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 1.1rem;
+      color: #8a7e6b;
+      font-weight: 400;
+      letter-spacing: 0.3em;
+      margin-bottom: 2.5em;
+    }
+    #loading-bar-outer {
+      width: 280px;
+      height: 2px;
+      background: rgba(138, 126, 107, 0.2);
+      border-radius: 1px;
+      overflow: hidden;
+    }
+    #loading-bar-inner {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #8a7e6b, #d4c5a9);
+      transition: width 0.3s ease;
+    }
+    #loading-text {
+      font-size: 0.75rem;
+      color: #5a5248;
+      margin-top: 1em;
+      letter-spacing: 0.2em;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading-screen">
+    <h1>最後一瓣落下</h1>
+    <h2>THE LAST PETAL FALLS</h2>
+    <div id="loading-bar-outer">
+      <div id="loading-bar-inner"></div>
+    </div>
+    <p id="loading-text">Loading…</p>
+  </div>
+  <div id="game-canvas"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
