@@ -251,10 +251,14 @@ class AudioManager {
   duckBGM(duration = 0.1) {
     if (!this.currentBGM) return;
     const track = this.tracks[this.currentBGM];
-    const origVol = track.volume();
-    track.fade(origVol, origVol * 0.3, 50);
-    setTimeout(() => {
-      track.fade(track.volume(), origVol, duration * 1000);
+    const baseVol = this.currentBGM === 'rebirth' ? 0.35 : 0.55;
+    
+    track.fade(track.volume(), baseVol * 0.3, 50);
+    
+    if (this._duckTimeout) clearTimeout(this._duckTimeout);
+    
+    this._duckTimeout = setTimeout(() => {
+      track.fade(track.volume(), baseVol, duration * 1000);
     }, 80);
   }
 }
